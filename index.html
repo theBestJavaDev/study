@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyStudio - AI Knowledge Workspace</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar: Sources -->
+        <aside class="sidebar">
+            <h2>📚 Sources</h2>
+            <p class="subtitle">Upload notes or paste text</p>
+            
+            <div class="upload-box">
+                <input type="file" id="fileInput" multiple accept=".txt,.md,.csv">
+                <label for="fileInput" class="file-label">+ Upload Text Files</label>
+            </div>
+
+            <div class="text-input-section">
+                <textarea id="sourceTextInput" placeholder="Or paste your lecture notes / article text here..."></textarea>
+                <button id="addSourceBtn" class="btn primary">Add Source</button>
+            </div>
+
+            <div id="sourcesList" class="sources-list">
+                <!-- Dynamic sources will appear here -->
+            </div>
+        </aside>
+
+        <!-- Main Workspace: AI Synthesis & Study Tools -->
+        <main class="main-content">
+            <header>
+                <h1>🧠 AI Study Workspace</h1>
+                <div class="api-config">
+                    <input type="password" id="apiKeyInput" placeholder="Enter Gemini API Key (optional)">
+                </div>
+            </header>
+
+            <div class="action-bar">
+                <button class="synth-btn" data-action="summary">📝 Generate Study Guide</button>
+                <button class="synth-btn" data-action="flashcards">🎴 Create Flashcards</button>
+                <button class="synth-btn" data-action="quiz">❓ Make Quiz</button>
+            </div>
+
+            <section class="output-section">
+                <div id="loadingIndicator" class="hidden">Synthesizing study materials... ⏳</div>
+                <div id="outputContainer" class="output-card">
+                    <p class="placeholder-text">Add sources on the left, then click one of the buttons above to generate AI study materials!</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
