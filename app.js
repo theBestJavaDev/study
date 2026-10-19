@@ -1,115 +1,191 @@
-// State management
-let sources = [];
-
-const sourceTextInput = document.getElementById('sourceTextInput');
-const addSourceBtn = document.getElementById('addSourceBtn');
-const sourcesList = document.getElementById('sourcesList');
-const fileInput = document.getElementById('fileInput');
-const outputContainer = document.getElementById('outputContainer');
-const loadingIndicator = document.getElementById('loadingIndicator');
-const apiKeyInput = document.getElementById('apiKeyInput');
-
-// Add text source
-addSourceBtn.addEventListener('click', () => {
-    const text = sourceTextInput.value.trim();
-    if (!text) return;
-    
-    sources.push({ name: `Note Source ${sources.length + 1}`, content: text });
-    sourceTextInput.value = '';
-    renderSources();
-});
-
-// Handle file uploads
-fileInput.addEventListener('change', async (e) => {
-    const files = e.target.files;
-    for (let file of files) {
-        const text = await file.text();
-        sources.push({ name: file.name, content: text });
-    }
-    renderSources();
-});
-
-function renderSources() {
-    sourcesList.innerHTML = '';
-    sources.forEach((source, index) => {
-        const div = document.createElement('div');
-        div.className = 'source-item';
-        div.innerHTML = `
-            <span>📄 ${source.name}</span>
-            <small>${source.content.length} chars</small>
-        `;
-        sourcesList.appendChild(div);
-    });
+:root {
+    --bg-color: #f8fafc;
+    --sidebar-bg: #ffffff;
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
 }
 
-// AI Synthesis Actions
-document.querySelectorAll('.synth-btn').forEach(button => {
-    button.addEventListener('click', async () => {
-        const action = button.getAttribute('data-action');
-        if (sources.length === 0) {
-            alert('Please add at least one source note or file first!');
-            return;
-        }
-
-        const combinedContext = sources.map(s => `Source (${s.name}):\n${s.content}`).join('\n\n');
-        const apiKey = apiKeyInput.value.trim();
-
-        loadingIndicator.classList.remove('hidden');
-        outputContainer.innerHTML = '';
-
-        try {
-            let resultText = '';
-            
-            if (apiKey) {
-                // Call Gemini API directly from browser if API key provided
-                resultText = await callGeminiAPI(apiKey, action, combinedContext);
-            } else {
-                // Simulated fallback if no API key entered yet
-                await new Promise(resolve => setTimeout(resolve, 1200));
-                resultText = generateMockSynthesis(action, combinedContext);
-            }
-
-            outputContainer.innerHTML = `<h3>Generated ${action.toUpperCase()}</h3><br>` + formatOutput(resultText);
-        } catch (error) {
-            outputContainer.innerHTML = `<p style="color: red;">Error generating response: ${error.message}</p>`;
-        } finally {
-            loadingIndicator.classList.add('hidden');
-        }
-    });
-});
-
-async function callGeminiAPI(apiKey, action, context) {
-    const promptMap = {
-        summary: "Synthesize a comprehensive, clean study guide with bullet points based on the following sources:",
-        flashcards: "Create 5-10 study flashcards (Question & Answer pairs) based on the following sources:",
-        quiz: "Create a 5-question multiple choice quiz with answer keys based on the following sources:"
-    };
-
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            contents: [{
-                parts: [{ text: `${promptMap[action]}\n\n${context}` }]
-            }]
-        })
-    });
-
-    const data = await response.json();
-    if (data.error) throw new Error(data.error.message);
-    return data.candidates[0].content.parts[0].text;
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
-function generateMockSynthesis(action, context) {
-    if (action === 'summary') {
-        return `**Mock Study Guide (Tip: Enter your Gemini API key above for live AI synthesis!):**\n\n- Key themes extracted from your ${sources.length} source(s).\n- Total characters analyzed: ${context.length}.\n- Core concepts emphasize structured learning and revision.`;
-    } else if (action === 'flashcards') {
-        return `**Mock Flashcards:**\n\n1. **Q:** What is the primary topic of the uploaded notes?\n   **A:** Custom study workflow sources.\n2. **Q:** How is this hosted?\n   **A:** Via GitHub Pages!`;
-    } else {
-        return `**Mock Quiz:**\n\n1. Which platform hosts this static web app?\n   - A) GitHub Pages (Correct)\n   - B) Local server only`;
-    }
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    height: 100vh;
+    display: flex;
 }
 
-function formatOutput(text) {
-    return `<div style="white-space: pre-wrap; font-size: 0.95rem;">${text}</div>`;
+.app-container {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 320px;
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    gap: 15px;
+}
+
+.sidebar h2 {
+    font-size: 1.25rem;
+}
+
+.subtitle {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.upload-box input {
+    display: none;
+}
+
+.file-label {
+    display: block;
+    border: 2px dashed var(--border);
+    padding: 12px;
+    text-align: center;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--primary);
+    font-weight: 500;
+}
+
+.file-label:hover {
+    background-color: #f1f5f9;
+}
+
+.text-input-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.text-input-section textarea {
+    width: 100%;
+    height: 100px;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    resize: none;
+    font-size: 0.85rem;
+}
+
+.btn {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.btn.primary {
+    background-color: var(--primary);
+    color: white;
+}
+
+.btn.primary:hover {
+    background-color: var(--primary-hover);
+}
+
+.sources-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.source-item {
+    background: #f8fafc;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    font-size: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Main Workspace */
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 30px;
+    gap: 20px;
+    overflow-y: auto;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.status-badge {
+    font-size: 0.85rem;
+    background: #e0e7ff;
+    color: #3730a3;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.action-bar {
+    display: flex;
+    gap: 12px;
+}
+
+.synth-btn {
+    padding: 10px 16px;
+    background-color: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text-main);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.synth-btn:hover {
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.output-section {
+    flex-grow: 1;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.output-card {
+    line-height: 1.6;
+}
+
+.placeholder-text {
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 40px;
+}
+
+.hidden {
+    display: none;
 }
